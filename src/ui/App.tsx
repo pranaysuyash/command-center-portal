@@ -10,13 +10,18 @@ import {
   loadSavedLifecycleState,
   saveLifecycleState,
 } from '../engine/lifecycle';
+import { SuiteDock } from './SuiteDock';
+import { EdiHubModal } from './EdiHubModal';
+import { DispatchManifestModal } from './DispatchManifestModal';
+import { TelemetryTicker } from './TelemetryTicker';
 
 export function App() {
   const [initialState] = useState(() => loadSavedLifecycleState());
   const [currentStage, setCurrentStage] = useState<LifecycleStageId>(initialState.currentStage);
   const [completedStages, setCompletedStages] = useState<LifecycleStageId[]>(initialState.completedStages);
   const [activeOrder, setActiveOrder] = useState<FreightOrderSpec>(initialState.activeOrder);
-  const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
+  const [isEdiModalOpen, setIsEdiModalOpen] = useState<boolean>(false);
+  const [isManifestModalOpen, setIsManifestModalOpen] = useState<boolean>(false);
 
   // Sync state to local storage
   useEffect(() => {
@@ -63,33 +68,11 @@ export function App() {
     dlAnchor.click();
   };
 
-  const handleCopyEdi204 = () => {
-    const edi204Mock = [
-      'ISA*00*          *00*          *ZZ*SHIPPER        *ZZ*CARRIER        *261021*1200*U*00401*000000001*0*P*>~',
-      'GS*TM*SHIPPER*CARRIER*20261021*1200*1*X*004010~',
-      `ST*204*0001~`,
-      `B2**${activeOrder.orderNumber}**PP~`,
-      `B2A*00*LT~`,
-      `L11*${activeOrder.orderId}*OQ~`,
-      `G62*10*${activeOrder.requiredDeliveryDate.slice(0, 10).replace(/-/g, '')}~`,
-      `N1*SH*${activeOrder.customerName}~`,
-      `N4*${activeOrder.originCity.split(',')[0]}*${activeOrder.originCity.split(',')[1]?.trim() || 'IL'}*US~`,
-      `N1*CN*Receiving Terminal Consignee~`,
-      `N4*${activeOrder.destinationCity.split(',')[0]}*${activeOrder.destinationCity.split(',')[1]?.trim() || 'NY'}*US~`,
-      `S5*1*LD~`,
-      `OID*${activeOrder.orderNumber}*${activeOrder.packageCount}*PLT*${activeOrder.totalPayloadLbs}*LB~`,
-      `SE*14*0001~`,
-      'GE*1*1~',
-      'IEA*1*000000001~',
-    ].join('\n');
 
-    navigator.clipboard.writeText(edi204Mock);
-    setCopiedNotification('Copied EDI 204 Load Tender to Clipboard!');
-    setTimeout(() => setCopiedNotification(null), 3000);
-  };
 
   return (
     <div className="portal-root">
+      <SuiteDock currentProductId="command-center-portal" />
       {/* Master Command Bar Header */}
       <header className="portal-header">
         <div className="header-brand">
@@ -132,6 +115,9 @@ export function App() {
           </select>
         </div>
       </header>
+
+      {/* Live Fleet Telemetry Stream Ticker */}
+      <TelemetryTicker />
 
       {/* Global 5-Stage Stepper Ribbon */}
       <div className="lifecycle-ribbon">
@@ -336,12 +322,14 @@ export function App() {
           <span><strong>Vehicle:</strong> {activeOrder.vehicleName}</span>
           <span><strong>Payload:</strong> {activeOrder.totalPayloadLbs.toLocaleString()} lbs ({activeOrder.packageCount} units)</span>
           <span><strong>Total Rate:</strong> ${activeOrder.totalCarrierPay.toLocaleString()}</span>
-          {copiedNotification && <span style={{ color: '#10b981', fontWeight: 600 }}>{copiedNotification}</span>}
         </div>
 
         <div className="footer-actions">
-          <button onClick={handleCopyEdi204} className="btn-export-json">
-            <span>📄 Copy EDI 204 Tender</span>
+          <button onClick={() => setIsEdiModalOpen(true)} className="btn-export-json primary">
+            <span>⚡ EDI Transaction Hub (204/990/214/210)</span>
+          </button>
+          <button onClick={() => setIsManifestModalOpen(true)} className="btn-export-json">
+            <span>📄 Master VICS BOL & Dispatch Packet</span>
           </button>
           <button onClick={handleExportJson} className="btn-export-json">
             <span>💾 Export Master JSON</span>
@@ -351,6 +339,20 @@ export function App() {
           </button>
         </div>
       </footer>
+
+      {/* Interactive EDI Hub Modal */}
+      <EdiHubModal
+        order={activeOrder}
+        isOpen={isEdiModalOpen}
+        onClose={() => setIsEdiModalOpen(false)}
+      />
+
+      {/* Printable Master Freight BOL & Dispatch Packet Modal */}
+      <DispatchManifestModal
+        order={activeOrder}
+        isOpen={isManifestModalOpen}
+        onClose={() => setIsManifestModalOpen(false)}
+      />
     </div>
   );
 }

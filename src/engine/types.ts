@@ -20,6 +20,14 @@ export interface SubProductMeta {
   accentColor: string;
 }
 
+export const CLOUD_URLS: Record<LifecycleStageId, string> = {
+  asset_studio: 'https://fleetstudio.pages.dev',
+  cargo_fit: 'https://cargofit.pages.dev',
+  freight_pricing: 'https://freightpricing.pages.dev',
+  hos_planner: 'https://hosdispatch.pages.dev',
+  fleet_telematics: 'https://fleettelematics.pages.dev',
+};
+
 export const SUB_PRODUCTS: SubProductMeta[] = [
   {
     id: 'asset_studio',

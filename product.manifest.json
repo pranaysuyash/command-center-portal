@@ -1,0 +1,26 @@
+{
+  "$schema": "https://trucking.platform.io/schemas/subproduct-manifest-v1.json",
+  "id": "command-center-portal",
+  "name": "Unified Freight Command Center Portal",
+  "shortName": "Command Center",
+  "code": "PORTAL",
+  "version": "1.0.0",
+  "port": 5170,
+  "icon": "🌐",
+  "description": "Unified executive command portal orchestrating the end-to-end commercial freight lifecycle across all 5 sovereign subproducts",
+  "category": "portal",
+  "entitlementKey": "command_center",
+  "routes": {
+    "dev": "http://localhost:5170",
+    "cloud": "https://trucking-command-center.pages.dev"
+  },
+  "bridges": {
+    "orchestrates": [
+      { "product": "product-01-cargo-fit", "port": 5173, "stage": "cargo_fit" },
+      { "product": "product-02-freight-pricing", "port": 5174, "stage": "pricing_hud" },
+      { "product": "product-03-hos-planner", "port": 5175, "stage": "hos_planning" },
+      { "product": "product-04-asset-studio", "port": 5176, "stage": "asset_studio" },
+      { "product": "product-05-fleet-telematics", "port": 5177, "stage": "fleet_telematics" }
+    ]
+  }
+}

@@ -7,6 +7,7 @@ import {
   FreightOrderSpec,
   LifecycleProgressState,
   SUB_PRODUCTS,
+  CLOUD_URLS,
 } from './types';
 
 export const DEFAULT_PRESET_ORDERS: FreightOrderSpec[] = [
@@ -98,6 +99,9 @@ export function buildSubProductContextUrl(
   const baseProduct = SUB_PRODUCTS.find((p) => p.id === stageId);
   if (!baseProduct) return 'http://localhost:5170';
 
+  const isCloud = typeof window !== 'undefined' && (window.location.hostname.includes('pages.dev') || window.location.hostname.includes('trucking.io'));
+  const baseUrl = isCloud ? (CLOUD_URLS[stageId] || baseProduct.url) : baseProduct.url;
+
   const params = new URLSearchParams();
   params.set('source', 'command_center_portal');
   params.set('orderId', order.orderId);
@@ -140,7 +144,7 @@ export function buildSubProductContextUrl(
       break;
   }
 
-  return `${baseProduct.url}/?${params.toString()}`;
+  return `${baseUrl}/?${params.toString()}`;
 }
 
 const STORAGE_KEY = 'trucking_portal_lifecycle_v1';

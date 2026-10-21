@@ -8,6 +8,12 @@ import {
   buildSubProductContextUrl,
   loadSavedLifecycleState,
 } from '../src/engine/lifecycle';
+import {
+  generateEdi204,
+  generateEdi990,
+  generateEdi214,
+  generateEdi210,
+} from '../src/engine/ediGenerator';
 
 describe('Global Command Center Portal Architecture', () => {
   it('registers all 5 commercial freight products with distinct ports', () => {
@@ -79,3 +85,46 @@ describe('Global Command Center Portal Architecture', () => {
     expect(state.activeOrder.orderId).toBe(DEFAULT_PRESET_ORDERS[0].orderId);
   });
 });
+
+describe('ANSI ASC X12 EDI Transaction Generation & Segment Parsing', () => {
+  const order = DEFAULT_PRESET_ORDERS[0];
+
+  it('generates compliant EDI 204 Motor Carrier Load Tender', () => {
+    const bundle = generateEdi204(order);
+    expect(bundle.docType).toBe('204');
+    expect(bundle.rawX12).toContain('ST*204*0001~');
+    expect(bundle.rawX12).toContain(`B2**${order.orderNumber}**PP~`);
+    expect(bundle.rawX12).toContain(`OID*${order.orderNumber}*${order.packageCount}*PLT*${order.totalPayloadLbs}*LB~`);
+    expect(bundle.rawX12).toContain('SE*17*0001~');
+    expect(bundle.parsedSegments.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('generates compliant EDI 990 Response to a Load Tender', () => {
+    const bundle = generateEdi990(order, true);
+    expect(bundle.docType).toBe('990');
+    expect(bundle.rawX12).toContain('ST*990*0001~');
+    expect(bundle.rawX12).toContain(`B1*CARRIEREXP*${order.orderNumber}*`);
+    expect(bundle.rawX12).toContain('*A~'); // A = Accepted
+    expect(bundle.jsonObj.decision).toBe('ACCEPTED');
+  });
+
+  it('generates compliant EDI 214 Transportation Carrier Shipment Status Message', () => {
+    const bundle = generateEdi214(order);
+    expect(bundle.docType).toBe('214');
+    expect(bundle.rawX12).toContain('ST*214*0001~');
+    expect(bundle.rawX12).toContain(`B10*${order.orderNumber}*${order.bolNumber}*CARRIEREXP~`);
+    expect(bundle.rawX12).toContain('AT7*X6*NS***');
+    expect(bundle.jsonObj.status).toBe('En Route to Delivery Location');
+  });
+
+  it('generates compliant EDI 210 Motor Carrier Freight Invoice', () => {
+    const bundle = generateEdi210(order);
+    expect(bundle.docType).toBe('210');
+    expect(bundle.rawX12).toContain('ST*210*0001~');
+    expect(bundle.rawX12).toContain(`B3*B*INV-${order.orderNumber}*${order.orderNumber}*PP*`);
+    expect(bundle.rawX12).toContain(`*${order.totalCarrierPay.toFixed(2)}*`);
+    expect(bundle.jsonObj.invoiceNumber).toBe(`INV-${order.orderNumber}`);
+    expect(bundle.jsonObj.totalInvoiceDue).toBe(order.totalCarrierPay);
+  });
+});
+
