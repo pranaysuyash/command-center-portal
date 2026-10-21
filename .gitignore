@@ -1,0 +1,17 @@
+# Dependencies
+node_modules
+node_modules/
+
+# Production builds
+dist/
+dist-ssr/
+.vite/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS & Editor
+.DS_Store
+.vscode/
+.idea/
