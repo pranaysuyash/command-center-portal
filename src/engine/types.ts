@@ -35,7 +35,7 @@ export const SUB_PRODUCTS: SubProductMeta[] = [
     name: 'Asset Studio',
     port: 5176,
     url: 'http://localhost:5176',
-    tagline: 'Digital Twin Catalog & Dynamic CG Simulator',
+    tagline: '3D Teardown Lab, Digital Twin Catalog & Dynamic CG Simulator',
     icon: '🚛',
     accentColor: '#c084fc',
   },
