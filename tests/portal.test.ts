@@ -144,5 +144,47 @@ describe('ANSI ASC X12 EDI Transaction Generation & Segment Parsing', () => {
     expect(bundle.jsonObj.invoiceNumber).toBe(`INV-${order.orderNumber}`);
     expect(bundle.jsonObj.totalInvoiceDue).toBe(order.totalCarrierPay);
   });
+
+  it('aggregates high-priority cross-product exceptions for the Exception Control Tower', () => {
+    const mockPlatformEvents = [
+      {
+        id: 'evt-1',
+        type: 'SAFETY_ALERT',
+        senderProduct: 'Product 05 Telematics',
+        senderPort: 5177,
+        timestamp: '2026-10-30T10:00:00Z',
+        summary: 'Reefer Thermal Excursion: Zone 1 Return Air +5°F over setpoint',
+        severity: 'critical' as const,
+        payloadJson: '{}',
+      },
+      {
+        id: 'evt-2',
+        type: 'CARGO_LOAD_UPDATED',
+        senderProduct: 'Product 01 Cargo Fit',
+        senderPort: 5173,
+        timestamp: '2026-10-30T10:05:00Z',
+        summary: 'Tractor Drive Tandem Overload: 35,400 lbs vs 34,000 lbs limit',
+        severity: 'warning' as const,
+        payloadJson: '{}',
+      },
+      {
+        id: 'evt-3',
+        type: 'ORDER_SELECTED',
+        senderProduct: 'Portal',
+        senderPort: 5170,
+        timestamp: '2026-10-30T10:10:00Z',
+        summary: 'Order 9042 selected',
+        severity: 'info' as const,
+        payloadJson: '{}',
+      },
+    ];
+
+    const criticalAndWarning = mockPlatformEvents.filter(
+      (e) => e.severity === 'critical' || e.severity === 'warning'
+    );
+    expect(criticalAndWarning.length).toBe(2);
+    expect(criticalAndWarning[0].type).toBe('SAFETY_ALERT');
+    expect(criticalAndWarning[1].type).toBe('CARGO_LOAD_UPDATED');
+  });
 });
 

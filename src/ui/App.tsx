@@ -31,6 +31,7 @@ import { EdiHubModal } from './EdiHubModal';
 import { DispatchManifestModal } from './DispatchManifestModal';
 import { TelemetryTicker } from './TelemetryTicker';
 import { PlatformEventStreamModal, RecordedPlatformEvent } from './PlatformEventStreamModal';
+import { ExceptionControlTower } from './ExceptionControlTower';
 
 export function App() {
   const [initialState] = useState(() => loadSavedLifecycleState());
@@ -306,6 +307,9 @@ export function App() {
       <div className="portal-main-layout">
         {/* Left Sidebar: Master Freight Dossier */}
         <aside className="order-dossier-panel" aria-label="Master Freight Dossier">
+          {/* High-Priority Exception Control Tower */}
+          <ExceptionControlTower liveEvents={platformEvents} />
+
           <div className="dossier-card">
             <h4>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconClipboard size={14} /> Order Overview</span>
