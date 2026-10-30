@@ -69,6 +69,13 @@ export interface PlatformEventPayloads {
     message: string;
     timestamp: string;
   };
+  CARRIER_VETTED: {
+    dotNumber: string;
+    legalName: string;
+    safetyScore: number;
+    isApproved: boolean;
+    timestamp: string;
+  };
 }
 
 export type PlatformEventType = keyof PlatformEventPayloads;
