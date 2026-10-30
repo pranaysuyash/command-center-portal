@@ -10,10 +10,27 @@ import {
   loadSavedLifecycleState,
   saveLifecycleState,
 } from '../engine/lifecycle';
+import { platformBus } from '../engine/platformBus';
 import { SuiteDock } from './SuiteDock';
+import {
+  IconTruck,
+  IconCheck,
+  IconClipboard,
+  IconPackage,
+  IconDollar,
+  IconClock,
+  IconRadio,
+  IconZap,
+  IconFileText,
+  IconDownload,
+  IconPrinter,
+  IconExternalLink,
+  ProductIcon,
+} from './icons';
 import { EdiHubModal } from './EdiHubModal';
 import { DispatchManifestModal } from './DispatchManifestModal';
 import { TelemetryTicker } from './TelemetryTicker';
+import { PlatformEventStreamModal, RecordedPlatformEvent } from './PlatformEventStreamModal';
 
 export function App() {
   const [initialState] = useState(() => loadSavedLifecycleState());
@@ -22,6 +39,103 @@ export function App() {
   const [activeOrder, setActiveOrder] = useState<FreightOrderSpec>(initialState.activeOrder);
   const [isEdiModalOpen, setIsEdiModalOpen] = useState<boolean>(false);
   const [isManifestModalOpen, setIsManifestModalOpen] = useState<boolean>(false);
+  const [isEventStreamModalOpen, setIsEventStreamModalOpen] = useState<boolean>(false);
+  const [isAutoPilot, setIsAutoPilot] = useState<boolean>(false);
+  const [platformEvents, setPlatformEvents] = useState<RecordedPlatformEvent[]>([]);
+
+  // Subscribe to cross-tab Platform Mesh events
+  useEffect(() => {
+    // Load persisted recent events from ring buffer on mount
+    try {
+      const recent = platformBus.getRecentEvents(30);
+      if (recent.length > 0) {
+        const initialRecorded: RecordedPlatformEvent[] = recent.map((msg, idx) => ({
+          id: `init-${idx}-${msg.timestamp}`,
+          type: msg.type,
+          senderProduct: msg.senderProduct,
+          senderPort: msg.senderPort,
+          timestamp: msg.timestamp,
+          summary: `${msg.type} from ${msg.senderProduct}`,
+          severity: msg.type === 'SAFETY_ALERT' ? 'warning' : 'info',
+          payloadJson: JSON.stringify(msg.payload, null, 2),
+        }));
+        setPlatformEvents(initialRecorded);
+      }
+    } catch {}
+
+    const handleEvent = (type: any, payload: any, msg: any) => {
+      let summary = '';
+      let severity: 'critical' | 'warning' | 'info' = 'info';
+
+      if (type === 'SAFETY_ALERT') {
+        summary = `${payload.category}: ${payload.message}`;
+        severity = payload.severity === 'critical' ? 'critical' : payload.severity === 'warning' ? 'warning' : 'info';
+      } else if (type === 'PRICING_UPDATED') {
+        summary = `Quote: $${payload.totalQuote?.toLocaleString()} ($${payload.ratePerMile}/mi) · OR: ${payload.operatingRatioPct}%`;
+        severity = payload.operatingRatioPct > 98 ? 'warning' : 'info';
+        // Auto-advance pricing stage in lifecycle stepper
+        setCompletedStages((prev) => (prev.includes('freight_pricing') ? prev : [...prev, 'freight_pricing']));
+      } else if (type === 'HOS_SCHEDULE_UPDATED') {
+        summary = `Corridor: ${payload.totalTransitHours} hrs (${payload.driverMode}) · ${payload.isLegal ? '✓ Legal' : '⚠ Violation'}`;
+        severity = payload.isLegal ? 'info' : 'critical';
+        // Auto-advance HOS stage in lifecycle stepper
+        setCompletedStages((prev) => (prev.includes('hos_planner') ? prev : [...prev, 'hos_planner']));
+      } else if (type === 'CARGO_LOAD_UPDATED') {
+        summary = `Cargo: ${payload.itemCount} items, ${payload.totalWeightLbs?.toLocaleString()} lbs · Axle: ${payload.axleLegal ? 'Legal' : 'Overload'}`;
+        severity = payload.axleLegal ? 'info' : 'warning';
+        // Auto-advance cargo fit stage in lifecycle stepper
+        setCompletedStages((prev) => (prev.includes('cargo_fit') ? prev : [...prev, 'cargo_fit']));
+      } else if (type === 'ORDER_SELECTED') {
+        summary = `Order ${payload.orderNumber}: ${payload.origin} → ${payload.destination} (${payload.distanceMiles} mi)`;
+        setCompletedStages((prev) => (prev.includes('asset_studio') ? prev : [...prev, 'asset_studio']));
+      } else if (type === 'TELEMATICS_STREAM_TICK') {
+        summary = `Unit ${payload.vehicleUnitNumber}: ${payload.speedMph} mph · ${payload.nearestCity} · Fuel ${payload.fuelLevelPct}%`;
+        setCompletedStages((prev) => (prev.includes('fleet_telematics') ? prev : [...prev, 'fleet_telematics']));
+      } else {
+        summary = JSON.stringify(payload);
+      }
+
+      const recorded: RecordedPlatformEvent = {
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        type,
+        senderProduct: msg?.senderProduct || 'mesh',
+        senderPort: msg?.senderPort,
+        timestamp: msg?.timestamp || new Date().toISOString(),
+        summary,
+        severity,
+        payloadJson: JSON.stringify(payload, null, 2),
+      };
+
+      setPlatformEvents((prev) => [recorded, ...prev.slice(0, 49)]);
+    };
+
+    const types = ['SAFETY_ALERT', 'PRICING_UPDATED', 'HOS_SCHEDULE_UPDATED', 'CARGO_LOAD_UPDATED', 'ORDER_SELECTED', 'VEHICLE_CHANGED', 'TELEMATICS_STREAM_TICK'] as const;
+    const unsubs = types.map((t) => platformBus.subscribe(t, (payload, msg) => handleEvent(t, payload, msg)));
+    return () => {
+      unsubs.forEach((u) => u());
+    };
+  }, []);
+
+  // Auto-Pilot continuous lifecycle runner
+  useEffect(() => {
+    if (!isAutoPilot) return;
+
+    const timer = setInterval(() => {
+      const stageIds = SUB_PRODUCTS.map((p) => p.id);
+      setCurrentStage((prev) => {
+        const idx = stageIds.indexOf(prev);
+        setCompletedStages((c) => (c.includes(prev) ? c : [...c, prev]));
+        if (idx < stageIds.length - 1) {
+          return stageIds[idx + 1];
+        } else {
+          setIsAutoPilot(false);
+          return stageIds[0];
+        }
+      });
+    }, 3200);
+
+    return () => clearInterval(timer);
+  }, [isAutoPilot]);
 
   // Sync state to local storage
   useEffect(() => {
@@ -57,6 +171,23 @@ export function App() {
     const found = DEFAULT_PRESET_ORDERS.find((o) => o.orderId === orderId);
     if (found) {
       setActiveOrder(found);
+      platformBus.publish(
+        'ORDER_SELECTED',
+        {
+          orderId: found.orderId,
+          orderNumber: found.orderNumber,
+          customerName: found.customerName,
+          origin: found.originCity,
+          destination: found.destinationCity,
+          distanceMiles: found.distanceMiles,
+          vehicleId: found.vehicleId,
+          packageId: found.packageId,
+          packageCount: found.packageCount,
+          totalPayloadLbs: found.totalPayloadLbs,
+          timestamp: new Date().toISOString(),
+        },
+        { senderProduct: 'command-center-portal', senderPort: 5170 }
+      );
     }
   };
 
@@ -72,19 +203,20 @@ export function App() {
 
   return (
     <div className="portal-root">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <SuiteDock currentProductId="command-center-portal" />
       {/* Master Command Bar Header */}
       <header className="portal-header">
         <div className="header-brand">
-          <div className="brand-shield">🚛</div>
+          <div className="brand-shield"><IconTruck size={22} /></div>
           <div className="brand-text">
             <h1>TRUCKING COMMAND CENTER</h1>
-            <span>UNIFIED FREIGHT & FLEET LIFECYCLE PORTAL · PORT 5170</span>
+            <span>STANDALONE PRESET DEMONSTRATION · PORT 5170</span>
           </div>
         </div>
 
         {/* Live Subproduct Heartbeat Monitors */}
-        <div className="fleet-heartbeats-row">
+        <nav aria-label="Subproduct ports" className="fleet-heartbeats-row">
           {SUB_PRODUCTS.map((prod) => (
             <a
               key={prod.id}
@@ -98,12 +230,13 @@ export function App() {
               <span>{prod.code}: {prod.port}</span>
             </a>
           ))}
-        </div>
+        </nav>
 
         {/* Master Order Preset Selector */}
         <div className="order-selector-box">
-          <span style={{ fontSize: '11px', color: '#94a3b8' }}>ACTIVE LOAD:</span>
+          <label htmlFor="portal-active-load-select" style={{ fontSize: '11px', color: '#94a3b8' }}>ACTIVE LOAD:</label>
           <select
+            id="portal-active-load-select"
             value={activeOrder.orderId}
             onChange={(e) => handleSelectOrder(e.target.value)}
           >
@@ -116,11 +249,14 @@ export function App() {
         </div>
       </header>
 
-      {/* Live Fleet Telemetry Stream Ticker */}
-      <TelemetryTicker />
+      {/* Live Fleet Telemetry & Platform Mesh Stream */}
+      <TelemetryTicker
+        liveEvents={platformEvents}
+        onOpenEventStream={() => setIsEventStreamModalOpen(true)}
+      />
 
       {/* Global 5-Stage Stepper Ribbon */}
-      <div className="lifecycle-ribbon">
+      <nav aria-label="Freight lifecycle stages" className="lifecycle-ribbon">
         {SUB_PRODUCTS.map((prod, idx) => {
           const isCurrent = currentStage === prod.id;
           const isCompleted = completedStages.includes(prod.id);
@@ -131,11 +267,32 @@ export function App() {
               onClick={() => handleSelectStage(prod.id)}
               className={`step-card-btn ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''}`}
             >
-              <div className="step-icon-bubble">{prod.icon}</div>
+              <div className="step-icon-bubble">
+                <ProductIcon
+                  productId={
+                    prod.id === 'warehouse_space'
+                      ? 'product-06-warehouse-space-flow'
+                      : prod.id === 'asset_studio'
+                      ? 'product-04-asset-studio'
+                      : prod.id === 'cargo_fit'
+                      ? 'product-01-cargo-fit'
+                      : prod.id === 'freight_pricing'
+                      ? 'product-02-freight-pricing'
+                      : prod.id === 'hos_planner'
+                      ? 'product-03-hos-planner'
+                      : 'product-05-fleet-telematics'
+                  }
+                  size={20}
+                />
+              </div>
               <div className="step-info-col">
                 <div className="step-code-row">
                   <span>STAGE 0{idx + 1} · {prod.code}</span>
-                  {isCompleted && <span style={{ color: '#10b981' }}>✓ DONE</span>}
+                  {isCompleted && (
+                    <span style={{ color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <IconCheck size={12} /> VIEWED
+                    </span>
+                  )}
                 </div>
                 <div className="step-name">{prod.name}</div>
                 <div className="step-tagline">{prod.tagline}</div>
@@ -143,15 +300,15 @@ export function App() {
             </button>
           );
         })}
-      </div>
+      </nav>
 
       {/* Main Workspace Split Layout */}
       <div className="portal-main-layout">
         {/* Left Sidebar: Master Freight Dossier */}
-        <aside className="order-dossier-panel">
+        <aside className="order-dossier-panel" aria-label="Master Freight Dossier">
           <div className="dossier-card">
             <h4>
-              <span>📋 Order Overview</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconClipboard size={14} /> Order Overview</span>
               <span style={{ color: '#38bdf8' }}>{activeOrder.orderNumber}</span>
             </h4>
             <div className="dossier-row">
@@ -174,7 +331,7 @@ export function App() {
 
           <div className="dossier-card">
             <h4>
-              <span>🚛 P04 Equipment Spec</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconTruck size={14} /> P04 Equipment Spec</span>
               <span className="compliance-badge compliant">ACTIVE</span>
             </h4>
             <div className="dossier-row">
@@ -193,7 +350,7 @@ export function App() {
 
           <div className="dossier-card">
             <h4>
-              <span>📦 P01 Cargo & Axle Fit</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconPackage size={14} /> P01 Cargo & Axle Fit</span>
               <span className="compliance-badge compliant">LEGAL GVW</span>
             </h4>
             <div className="dossier-row">
@@ -216,7 +373,7 @@ export function App() {
 
           <div className="dossier-card">
             <h4>
-              <span>💰 P02 Freight Pricing</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconDollar size={14} /> P02 Freight Pricing</span>
               <span style={{ color: '#10b981' }}>${activeOrder.totalCarrierPay.toLocaleString()}</span>
             </h4>
             <div className="dossier-row">
@@ -235,7 +392,7 @@ export function App() {
 
           <div className="dossier-card">
             <h4>
-              <span>⏱️ P03 FMCSA HOS Schedule</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconClock size={14} /> P03 FMCSA HOS Schedule</span>
               <span className="compliance-badge compliant">100% LEGAL</span>
             </h4>
             <div className="dossier-row">
@@ -254,7 +411,7 @@ export function App() {
 
           <div className="dossier-card">
             <h4>
-              <span>📡 P05 Telematics & BOL</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconRadio size={14} /> P05 Telematics & BOL</span>
               <span style={{ color: '#f43f5e' }}>DISPATCHED</span>
             </h4>
             <div className="dossier-row">
@@ -277,10 +434,25 @@ export function App() {
         </aside>
 
         {/* Center Stage: Interactive Glass Pane */}
-        <main className="stage-glass-pane">
+        <main id="main-content" className="stage-glass-pane" tabIndex={-1}>
           <div className="glass-toolbar">
             <div className="stage-title-wrap">
-              <span style={{ fontSize: '18px' }}>{activeSubProduct.icon}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <ProductIcon
+                  productId={
+                    activeSubProduct.id === 'asset_studio'
+                      ? 'product-04-asset-studio'
+                      : activeSubProduct.id === 'cargo_fit'
+                      ? 'product-01-cargo-fit'
+                      : activeSubProduct.id === 'freight_pricing'
+                      ? 'product-02-freight-pricing'
+                      : activeSubProduct.id === 'hos_planner'
+                      ? 'product-03-hos-planner'
+                      : 'product-05-fleet-telematics'
+                  }
+                  size={20}
+                />
+              </span>
               <h2>{activeSubProduct.name}</h2>
               <span className="stage-badge">PORT {activeSubProduct.port}</span>
               <span style={{ fontSize: '12px', color: '#94a3b8' }}>— {activeSubProduct.tagline}</span>
@@ -293,13 +465,15 @@ export function App() {
                 rel="noopener noreferrer"
                 className="btn-open-external"
               >
-                <span>↗ Open Standalone Tab</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  Open Standalone Tab <IconExternalLink size={12} />
+                </span>
               </a>
               <button
                 onClick={handleAdvanceStage}
                 className="btn-stage-advance"
               >
-                <span>Next Stage →</span>
+                <span>Next Tool →</span>
               </button>
             </div>
           </div>
@@ -326,16 +500,16 @@ export function App() {
 
         <div className="footer-actions">
           <button onClick={() => setIsEdiModalOpen(true)} className="btn-export-json primary">
-            <span>⚡ EDI Transaction Hub (204/990/214/210)</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconZap size={14} /> EDI Transaction Hub (204/990/214/210)</span>
           </button>
           <button onClick={() => setIsManifestModalOpen(true)} className="btn-export-json">
-            <span>📄 Master VICS BOL & Dispatch Packet</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconFileText size={14} /> Master VICS BOL & Dispatch Packet</span>
           </button>
           <button onClick={handleExportJson} className="btn-export-json">
-            <span>💾 Export Master JSON</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconDownload size={14} /> Export Master JSON</span>
           </button>
           <button onClick={() => window.print()} className="btn-print-manifest">
-            <span>🖨️ Print Dispatch Manifest</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconPrinter size={14} /> Print Dispatch Manifest</span>
           </button>
         </div>
       </footer>
@@ -352,6 +526,14 @@ export function App() {
         order={activeOrder}
         isOpen={isManifestModalOpen}
         onClose={() => setIsManifestModalOpen(false)}
+      />
+
+      {/* Reactive Cross-Tab Platform Event Stream Modal */}
+      <PlatformEventStreamModal
+        isOpen={isEventStreamModalOpen}
+        onClose={() => setIsEventStreamModalOpen(false)}
+        events={platformEvents}
+        onClearEvents={() => setPlatformEvents([])}
       />
     </div>
   );

@@ -233,6 +233,16 @@ export function generateEdi214(order: FreightOrderSpec): EdiDocumentBundle {
   const dateCCYYMMDD = formatDate(today, 'CCYYMMDD');
   const timeHHMM = formatTime(today);
 
+  // Derive truthful ANSI X12 AT7 status code and description from actual dispatch status
+  const isDelivered = order.currentDispatchStatus === 'delivered';
+  const isEnRoute = order.currentDispatchStatus === 'in_transit';
+  const statusCode = isDelivered ? 'D1' : isEnRoute ? 'X6' : 'X3';
+  const statusDesc = isDelivered
+    ? 'Completed / Delivered at Consignee'
+    : isEnRoute
+    ? 'En Route to Delivery Location'
+    : 'Arrived at Pick-up Location / Live Loading in Progress';
+
   const segments: string[] = [
     `ISA*00*          *00*          *ZZ*CARRIEREXP     *ZZ*${order.customerName.slice(0, 15).padEnd(15)}*${dateYYMMDD}*${timeHHMM}*U*00401*000000003*0*P*>~`,
     `GS*QM*CARRIEREXP*${order.customerName.slice(0, 10).trim()}*${dateCCYYMMDD}*${timeHHMM}*3*X*004010~`,
@@ -241,7 +251,7 @@ export function generateEdi214(order: FreightOrderSpec): EdiDocumentBundle {
     `L11*${order.orderId}*OQ~`,
     `N1*CN*Consignee Receiving Docks~`,
     `LX*1~`,
-    `AT7*X6*NS***${dateCCYYMMDD}*${timeHHMM}*ET~`,
+    `AT7*${statusCode}*NS***${dateCCYYMMDD}*${timeHHMM}*ET~`,
     `MS1*Chicago*IL*US~`,
     `MS2*CARRIEREXP*104~`,
     `SE*9*0001~`,
@@ -259,9 +269,9 @@ export function generateEdi214(order: FreightOrderSpec): EdiDocumentBundle {
       transactionSet: '214',
       orderNumber: order.orderNumber,
       bol: order.bolNumber,
-      status: 'En Route to Delivery Location',
-      statusCode: 'X6',
-      currentLocation: 'Chicago, IL',
+      status: statusDesc,
+      statusCode,
+      currentLocation: isEnRoute ? 'En Route Corridor (I-80/I-55)' : order.originCity,
       tractorUnit: order.assignedTractorUnit,
       reeferStatus: `${order.reeferSetpointF}°F Nominal`,
     },
@@ -272,7 +282,7 @@ export function generateEdi214(order: FreightOrderSpec): EdiDocumentBundle {
         name: 'Shipment Status Details',
         purpose: 'Provides live operational milestone code and time stamp.',
         fields: [
-          { tag: 'AT701', name: 'Shipment Status Code', value: 'X6', description: 'En Route to Delivery Location' },
+          { tag: 'AT701', name: 'Shipment Status Code', value: statusCode, description: statusDesc },
           { tag: 'AT702', name: 'Shipment Status Reason Code', value: 'NS', description: 'Normal Transit (On Schedule)' },
           { tag: 'AT705', name: 'Event Date', value: dateCCYYMMDD, description: 'GPS Timestamp Date' },
           { tag: 'AT706', name: 'Event Time', value: timeHHMM, description: 'GPS Timestamp Time' },
@@ -291,6 +301,7 @@ export function generateEdi210(order: FreightOrderSpec): EdiDocumentBundle {
   const dateCCYYMMDD = formatDate(today, 'CCYYMMDD');
   const timeHHMM = formatTime(today);
 
+  // Exactly 13 segments in transaction set ST through SE inclusive
   const segments: string[] = [
     `ISA*00*          *00*          *ZZ*CARRIEREXP     *ZZ*${order.customerName.slice(0, 15).padEnd(15)}*${dateYYMMDD}*${timeHHMM}*U*00401*000000004*0*P*>~`,
     `GS*IM*CARRIEREXP*${order.customerName.slice(0, 10).trim()}*${dateCCYYMMDD}*${timeHHMM}*4*X*004010~`,
@@ -306,7 +317,7 @@ export function generateEdi210(order: FreightOrderSpec): EdiDocumentBundle {
     `LX*3~`,
     `L1*3*${order.accessorialsTotal.toFixed(2)}*REE*${order.accessorialsTotal.toFixed(2)}~`,
     `L3*${order.totalPayloadLbs}*G*${order.totalCarrierPay.toFixed(2)}*****${order.packageCount}*PLT~`,
-    `SE*14*0001~`,
+    `SE*13*0001~`,
     `GE*1*4~`,
     `IEA*1*000000004~`,
   ];

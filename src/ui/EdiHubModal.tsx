@@ -7,6 +7,7 @@ import {
   generateEdi210,
   EdiDocumentBundle,
 } from '../engine/ediGenerator';
+import { IconZap, IconX, IconClipboard, IconDownload } from './icons';
 
 interface EdiHubModalProps {
   order: FreightOrderSpec;
@@ -50,7 +51,7 @@ export const EdiHubModal: React.FC<EdiHubModalProps> = ({ order, isOpen, onClose
         {/* Modal Header */}
         <div className="edi-modal-header">
           <div className="header-title-row">
-            <span style={{ fontSize: '20px' }}>⚡</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', color: '#f59e0b' }}><IconZap size={20} /></span>
             <div>
               <h3>ANSI ASC X12 EDI TRANSACTION HUB</h3>
               <span className="subtitle">
@@ -58,7 +59,7 @@ export const EdiHubModal: React.FC<EdiHubModalProps> = ({ order, isOpen, onClose
               </span>
             </div>
           </div>
-          <button className="btn-modal-close" onClick={onClose}>✕</button>
+          <button className="btn-modal-close" onClick={onClose}><IconX size={16} /></button>
         </div>
 
         {/* Transaction Set Tabs */}
@@ -124,10 +125,10 @@ export const EdiHubModal: React.FC<EdiHubModalProps> = ({ order, isOpen, onClose
           <div className="modal-actions-right">
             {copiedNote && <span className="copy-notice">{copiedNote}</span>}
             <button onClick={handleCopyRaw} className="btn-copy-action">
-              📋 Copy X12
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconClipboard size={14} /> Copy X12</span>
             </button>
             <button onClick={handleDownload} className="btn-dl-action">
-              💾 Download .x12
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconDownload size={14} /> Download .x12</span>
             </button>
           </div>
         </div>

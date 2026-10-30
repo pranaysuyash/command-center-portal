@@ -108,6 +108,24 @@ export function buildSubProductContextUrl(
   params.set('orderNumber', order.orderNumber);
 
   switch (stageId) {
+    case 'warehouse_space':
+      params.set('dockDoor', 'D-02');
+      params.set('velocity', 'A');
+      params.set('manifestCount', String(order.packageCount));
+      break;
+
+    case 'yard_dock':
+      params.set('commodity', order.vehicleId.includes('reefer') ? 'REEFER' : 'DRY_VAN');
+      params.set('pallets', String(order.packageCount));
+      params.set('carrierDot', '3194012');
+      break;
+
+    case 'carrier_trust':
+      params.set('carrierDot', '3194012');
+      params.set('carrierName', 'Polar Express Logistics LLC');
+      params.set('action', 'pre_dispatch_audit');
+      break;
+
     case 'asset_studio':
       params.set('vehicle', order.vehicleId);
       params.set('package', order.packageId);

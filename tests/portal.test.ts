@@ -16,8 +16,8 @@ import {
 } from '../src/engine/ediGenerator';
 
 describe('Global Command Center Portal Architecture', () => {
-  it('registers all 5 commercial freight products with distinct ports', () => {
-    expect(SUB_PRODUCTS.length).toBe(5);
+  it('registers all commercial freight products with distinct ports', () => {
+    expect(SUB_PRODUCTS.length).toBe(8);
 
     const ports = SUB_PRODUCTS.map((p) => p.port);
     expect(ports).toContain(5173); // P01: Cargo Fit
@@ -25,9 +25,12 @@ describe('Global Command Center Portal Architecture', () => {
     expect(ports).toContain(5175); // P03: HOS Planner
     expect(ports).toContain(5176); // P04: Asset Studio
     expect(ports).toContain(5177); // P05: Fleet Telematics
+    expect(ports).toContain(5178); // P06: Carrier Safety & Trust
+    expect(ports).toContain(5179); // P07: Warehouse Space & Flow
+    expect(ports).toContain(5180); // P08: Yard & Dock
 
     // Verify all ports are unique
-    expect(new Set(ports).size).toBe(5);
+    expect(new Set(ports).size).toBe(8);
   });
 
   it('contains valid default freight order presets with full lifecycle parameters', () => {
@@ -44,19 +47,22 @@ describe('Global Command Center Portal Architecture', () => {
     }
   });
 
-  it('generates context-rich bridge URLs for all 5 subproducts from the active order', () => {
+  it('generates context-rich bridge URLs for all subproducts from the active order', () => {
     const order = DEFAULT_PRESET_ORDERS[0];
     const stages: LifecycleStageId[] = [
       'asset_studio',
       'cargo_fit',
+      'warehouse_space',
+      'carrier_trust',
       'freight_pricing',
       'hos_planner',
       'fleet_telematics',
+      'yard_dock',
     ];
 
     for (const stage of stages) {
       const url = buildSubProductContextUrl(stage, order);
-      expect(url).toContain('http://localhost:517');
+      expect(url).toMatch(/http:\/\/localhost:51[78]\d/);
       expect(url).toContain('source=command_center_portal');
       expect(url).toContain(`orderId=${order.orderId}`);
     }
@@ -108,21 +114,33 @@ describe('ANSI ASC X12 EDI Transaction Generation & Segment Parsing', () => {
     expect(bundle.jsonObj.decision).toBe('ACCEPTED');
   });
 
-  it('generates compliant EDI 214 Transportation Carrier Shipment Status Message', () => {
-    const bundle = generateEdi214(order);
-    expect(bundle.docType).toBe('214');
-    expect(bundle.rawX12).toContain('ST*214*0001~');
-    expect(bundle.rawX12).toContain(`B10*${order.orderNumber}*${order.bolNumber}*CARRIEREXP~`);
-    expect(bundle.rawX12).toContain('AT7*X6*NS***');
-    expect(bundle.jsonObj.status).toBe('En Route to Delivery Location');
+  it('generates compliant EDI 214 Transportation Carrier Shipment Status Message with accurate dispatch status', () => {
+    // 1. Order in transit
+    const inTransitOrder = { ...order, currentDispatchStatus: 'in_transit' as const };
+    const bundleTransit = generateEdi214(inTransitOrder);
+    expect(bundleTransit.docType).toBe('214');
+    expect(bundleTransit.rawX12).toContain('ST*214*0001~');
+    expect(bundleTransit.rawX12).toContain(`B10*${order.orderNumber}*${order.bolNumber}*CARRIEREXP~`);
+    expect(bundleTransit.rawX12).toContain('AT7*X6*NS***');
+    expect(bundleTransit.jsonObj.status).toBe('En Route to Delivery Location');
+
+    // 2. Order still loading at origin dock (CC-02 fix)
+    const loadingOrder = { ...order, currentDispatchStatus: 'loading' as const };
+    const bundleLoading = generateEdi214(loadingOrder);
+    expect(bundleLoading.rawX12).toContain('AT7*X3*NS***');
+    expect(bundleLoading.jsonObj.statusCode).toBe('X3');
+    expect(bundleLoading.jsonObj.status).toContain('Loading in Progress');
   });
 
-  it('generates compliant EDI 210 Motor Carrier Freight Invoice', () => {
+  it('generates compliant EDI 210 Motor Carrier Freight Invoice with mathematically exact segment count (CC-02)', () => {
     const bundle = generateEdi210(order);
     expect(bundle.docType).toBe('210');
     expect(bundle.rawX12).toContain('ST*210*0001~');
     expect(bundle.rawX12).toContain(`B3*B*INV-${order.orderNumber}*${order.orderNumber}*PP*`);
     expect(bundle.rawX12).toContain(`*${order.totalCarrierPay.toFixed(2)}*`);
+    // Exact segment count verification: 13 segments from ST through SE
+    expect(bundle.rawX12).toContain('SE*13*0001~');
+    expect(bundle.rawX12).not.toContain('SE*14*0001~');
     expect(bundle.jsonObj.invoiceNumber).toBe(`INV-${order.orderNumber}`);
     expect(bundle.jsonObj.totalInvoiceDue).toBe(order.totalCarrierPay);
   });
