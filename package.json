@@ -9,7 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "deploy": "wrangler pages deploy dist --project-name=trucking-command-center"
+    "deploy": "wrangler pages deploy dist --project-name=freightportal"
   },
   "dependencies": {
     "react": "^19.0.0",

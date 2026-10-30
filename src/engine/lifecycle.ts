@@ -14,7 +14,7 @@ export const DEFAULT_PRESET_ORDERS: FreightOrderSpec[] = [
   {
     orderId: 'ORD-2026-X89',
     orderNumber: 'TRK-CHI-NYC-8921',
-    customerName: 'Kraft Heinz North America',
+    customerName: 'Summit Peak Foods LLC (Simulated Scenario)',
     originCity: 'Chicago, IL',
     destinationCity: 'New York, NY',
     distanceMiles: 790,
@@ -52,7 +52,7 @@ export const DEFAULT_PRESET_ORDERS: FreightOrderSpec[] = [
   {
     orderId: 'ORD-2026-M44',
     orderNumber: 'TRK-ATL-DFW-4402',
-    customerName: 'Home Depot Supply Chain',
+    customerName: 'Blue Ridge Industrial Supply (Simulated Scenario)',
     originCity: 'Atlanta, GA',
     destinationCity: 'Dallas, TX',
     distanceMiles: 780,
@@ -168,19 +168,34 @@ export function buildSubProductContextUrl(
 const STORAGE_KEY = 'trucking_portal_lifecycle_v1';
 
 export function loadSavedLifecycleState(): LifecycleProgressState {
+  const initialDecisions: Partial<Record<LifecycleStageId, import('./types').StageDecisionRecord>> = {
+    asset_studio: {
+      stageId: 'asset_studio',
+      status: 'COMPLETED',
+      verifiedBy: 'System Baseline (Asset Studio Digital Twin)',
+      timestamp: new Date().toISOString(),
+      notes: 'Initial 53ft equipment profile selected and verified',
+    },
+  };
+
   if (typeof window === 'undefined') {
     return {
       currentStage: 'asset_studio',
       completedStages: ['asset_studio'],
       activeOrder: DEFAULT_PRESET_ORDERS[0],
       lastUpdatedEpoch: Date.now(),
+      stageDecisions: initialDecisions,
     };
   }
 
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (!parsed.stageDecisions) {
+        parsed.stageDecisions = initialDecisions;
+      }
+      return parsed;
     }
   } catch (err) {
     console.warn('Failed to load saved portal state:', err);
@@ -191,6 +206,7 @@ export function loadSavedLifecycleState(): LifecycleProgressState {
     completedStages: ['asset_studio'],
     activeOrder: DEFAULT_PRESET_ORDERS[0],
     lastUpdatedEpoch: Date.now(),
+    stageDecisions: initialDecisions,
   };
 }
 

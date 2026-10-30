@@ -161,9 +161,21 @@ export interface FreightOrderSpec {
   currentDispatchStatus: 'staged' | 'loading' | 'in_transit' | 'delivered';
 }
 
+export interface StageDecisionRecord {
+  stageId: LifecycleStageId;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED' | 'OVERRIDDEN';
+  verifiedBy: string;
+  timestamp: string;
+  inboundPayload?: Record<string, unknown>;
+  computedOutput?: Record<string, unknown>;
+  discrepancies?: string[];
+  notes?: string;
+}
+
 export interface LifecycleProgressState {
   currentStage: LifecycleStageId;
   completedStages: LifecycleStageId[];
   activeOrder: FreightOrderSpec;
   lastUpdatedEpoch: number;
+  stageDecisions?: Partial<Record<LifecycleStageId, StageDecisionRecord>>;
 }

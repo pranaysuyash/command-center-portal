@@ -38,6 +38,7 @@ export function App() {
   const [currentStage, setCurrentStage] = useState<LifecycleStageId>(initialState.currentStage);
   const [completedStages, setCompletedStages] = useState<LifecycleStageId[]>(initialState.completedStages);
   const [activeOrder, setActiveOrder] = useState<FreightOrderSpec>(initialState.activeOrder);
+  const [stageDecisions, setStageDecisions] = useState<Partial<Record<LifecycleStageId, import('../engine/types').StageDecisionRecord>>>(() => initialState.stageDecisions || {});
   const [isEdiModalOpen, setIsEdiModalOpen] = useState<boolean>(false);
   const [isManifestModalOpen, setIsManifestModalOpen] = useState<boolean>(false);
   const [isEventStreamModalOpen, setIsEventStreamModalOpen] = useState<boolean>(false);
@@ -74,24 +75,79 @@ export function App() {
       } else if (type === 'PRICING_UPDATED') {
         summary = `Quote: $${payload.totalQuote?.toLocaleString()} ($${payload.ratePerMile}/mi) · OR: ${payload.operatingRatioPct}%`;
         severity = payload.operatingRatioPct > 98 ? 'warning' : 'info';
-        // Auto-advance pricing stage in lifecycle stepper
+        // Auto-advance pricing stage in lifecycle stepper with verified decision
         setCompletedStages((prev) => (prev.includes('freight_pricing') ? prev : [...prev, 'freight_pricing']));
+        setStageDecisions((prev) => ({
+          ...prev,
+          freight_pricing: {
+            stageId: 'freight_pricing',
+            status: 'COMPLETED',
+            verifiedBy: `${msg.senderProduct} (Port ${msg.senderPort})`,
+            timestamp: msg.timestamp || new Date().toISOString(),
+            computedOutput: payload,
+            notes: summary,
+          },
+        }));
       } else if (type === 'HOS_SCHEDULE_UPDATED') {
         summary = `Corridor: ${payload.totalTransitHours} hrs (${payload.driverMode}) · ${payload.isLegal ? '✓ Legal' : '⚠ Violation'}`;
         severity = payload.isLegal ? 'info' : 'critical';
-        // Auto-advance HOS stage in lifecycle stepper
+        // Auto-advance HOS stage in lifecycle stepper with verified decision
         setCompletedStages((prev) => (prev.includes('hos_planner') ? prev : [...prev, 'hos_planner']));
+        setStageDecisions((prev) => ({
+          ...prev,
+          hos_planner: {
+            stageId: 'hos_planner',
+            status: payload.isLegal ? 'COMPLETED' : 'REJECTED',
+            verifiedBy: `${msg.senderProduct} (Port ${msg.senderPort})`,
+            timestamp: msg.timestamp || new Date().toISOString(),
+            computedOutput: payload,
+            notes: summary,
+          },
+        }));
       } else if (type === 'CARGO_LOAD_UPDATED') {
         summary = `Cargo: ${payload.itemCount} items, ${payload.totalWeightLbs?.toLocaleString()} lbs · Axle: ${payload.axleLegal ? 'Legal' : 'Overload'}`;
         severity = payload.axleLegal ? 'info' : 'warning';
-        // Auto-advance cargo fit stage in lifecycle stepper
+        // Auto-advance cargo fit stage in lifecycle stepper with verified decision
         setCompletedStages((prev) => (prev.includes('cargo_fit') ? prev : [...prev, 'cargo_fit']));
+        setStageDecisions((prev) => ({
+          ...prev,
+          cargo_fit: {
+            stageId: 'cargo_fit',
+            status: payload.axleLegal ? 'COMPLETED' : 'OVERRIDDEN',
+            verifiedBy: `${msg.senderProduct} (Port ${msg.senderPort})`,
+            timestamp: msg.timestamp || new Date().toISOString(),
+            computedOutput: payload,
+            notes: summary,
+          },
+        }));
       } else if (type === 'ORDER_SELECTED') {
         summary = `Order ${payload.orderNumber}: ${payload.origin} → ${payload.destination} (${payload.distanceMiles} mi)`;
         setCompletedStages((prev) => (prev.includes('asset_studio') ? prev : [...prev, 'asset_studio']));
+        setStageDecisions((prev) => ({
+          ...prev,
+          asset_studio: {
+            stageId: 'asset_studio',
+            status: 'COMPLETED',
+            verifiedBy: `${msg.senderProduct} (Port ${msg.senderPort})`,
+            timestamp: msg.timestamp || new Date().toISOString(),
+            computedOutput: payload,
+            notes: summary,
+          },
+        }));
       } else if (type === 'TELEMATICS_STREAM_TICK') {
         summary = `Unit ${payload.vehicleUnitNumber}: ${payload.speedMph} mph · ${payload.nearestCity} · Fuel ${payload.fuelLevelPct}%`;
         setCompletedStages((prev) => (prev.includes('fleet_telematics') ? prev : [...prev, 'fleet_telematics']));
+        setStageDecisions((prev) => ({
+          ...prev,
+          fleet_telematics: {
+            stageId: 'fleet_telematics',
+            status: 'COMPLETED',
+            verifiedBy: `${msg.senderProduct} (Port ${msg.senderPort})`,
+            timestamp: msg.timestamp || new Date().toISOString(),
+            computedOutput: payload,
+            notes: summary,
+          },
+        }));
       } else {
         summary = JSON.stringify(payload);
       }
@@ -145,8 +201,9 @@ export function App() {
       completedStages,
       activeOrder,
       lastUpdatedEpoch: Date.now(),
+      stageDecisions,
     });
-  }, [currentStage, completedStages, activeOrder]);
+  }, [currentStage, completedStages, activeOrder, stageDecisions]);
 
   const activeSubProduct = SUB_PRODUCTS.find((p) => p.id === currentStage) || SUB_PRODUCTS[0];
   const iframeUrl = buildSubProductContextUrl(currentStage, activeOrder);
@@ -162,6 +219,17 @@ export function App() {
     if (!completedStages.includes(currentStage)) {
       setCompletedStages([...completedStages, currentStage]);
     }
+
+    setStageDecisions((prev) => ({
+      ...prev,
+      [currentStage]: prev[currentStage] || {
+        stageId: currentStage,
+        status: 'COMPLETED',
+        verifiedBy: 'Operator Manual Gate (Command Center)',
+        timestamp: new Date().toISOString(),
+        notes: `Operator verified stage ${currentStage} and advanced lifecycle`,
+      },
+    }));
 
     if (currentIndex < stageIds.length - 1) {
       setCurrentStage(stageIds[currentIndex + 1]);
