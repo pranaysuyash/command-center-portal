@@ -62,7 +62,7 @@ export const SUB_PRODUCTS: SubProductMeta[] = [
     port: 5178,
     url: 'http://localhost:5178',
     tagline: 'Multi-Constraint Inbound Space Planner & GS1 EPCIS Digital Twin',
-    icon: 'P07',
+    icon: 'P06',
     accentColor: '#06b6d4',
   },
   {
@@ -72,7 +72,7 @@ export const SUB_PRODUCTS: SubProductMeta[] = [
     port: 5180,
     url: 'http://localhost:5180',
     tagline: 'FMCSA SMS BASIC Scores & Anti-Double-Brokering Shield',
-    icon: 'P06',
+    icon: 'P08',
     accentColor: '#10b981',
   },
   {
@@ -112,7 +112,7 @@ export const SUB_PRODUCTS: SubProductMeta[] = [
     port: 5179,
     url: 'http://localhost:5179',
     tagline: 'Carrier Appointments, Gate OCR Kiosk & Detention Radar',
-    icon: 'P08',
+    icon: 'P07',
     accentColor: '#f59e0b',
   },
 ];

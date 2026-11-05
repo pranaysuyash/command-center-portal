@@ -32,6 +32,32 @@ import { DispatchManifestModal } from './DispatchManifestModal';
 import { TelemetryTicker } from './TelemetryTicker';
 import { PlatformEventStreamModal, RecordedPlatformEvent } from './PlatformEventStreamModal';
 import { ExceptionControlTower } from './ExceptionControlTower';
+import {
+  PersonaCockpitSwitcher,
+  PersonaRoleId,
+  filterPriorityStagesForRole,
+} from './PersonaCockpitSwitcher';
+
+function getProductSystemId(stageId: LifecycleStageId): string {
+  switch (stageId) {
+    case 'asset_studio':
+      return 'product-04-asset-studio';
+    case 'cargo_fit':
+      return 'product-01-cargo-fit';
+    case 'warehouse_space':
+      return 'product-06-warehouse-space-flow';
+    case 'yard_dock':
+      return 'product-07-yard-dock';
+    case 'carrier_trust':
+      return 'product-08-carrier-trust';
+    case 'freight_pricing':
+      return 'product-02-freight-pricing';
+    case 'hos_planner':
+      return 'product-03-hos-planner';
+    case 'fleet_telematics':
+      return 'product-05-fleet-telematics';
+  }
+}
 
 export function App() {
   const [initialState] = useState(() => loadSavedLifecycleState());
@@ -44,6 +70,20 @@ export function App() {
   const [isEventStreamModalOpen, setIsEventStreamModalOpen] = useState<boolean>(false);
   const [isAutoPilot, setIsAutoPilot] = useState<boolean>(false);
   const [platformEvents, setPlatformEvents] = useState<RecordedPlatformEvent[]>([]);
+  const [activeRoleId, setActiveRoleId] = useState<PersonaRoleId>(() => {
+    try {
+      const saved = localStorage.getItem('trucking-active-persona-role-v1');
+      if (saved) return saved as PersonaRoleId;
+    } catch {}
+    return 'PER-950374';
+  });
+
+  const handleSelectRole = (roleId: PersonaRoleId) => {
+    setActiveRoleId(roleId);
+    try {
+      localStorage.setItem('trucking-active-persona-role-v1', roleId);
+    } catch {}
+  };
 
   // Subscribe to cross-tab Platform Mesh events
   useEffect(() => {
@@ -324,39 +364,56 @@ export function App() {
         onOpenEventStream={() => setIsEventStreamModalOpen(true)}
       />
 
-      {/* Global 5-Stage Stepper Ribbon */}
+      {/* Role-Based Persona Cockpit Switcher (T-029) */}
+      <PersonaCockpitSwitcher
+        activeRoleId={activeRoleId}
+        onSelectRole={handleSelectRole}
+        order={activeOrder}
+        onNavigateStage={handleSelectStage}
+      />
+
+      {/* Global 8-Stage Stepper Ribbon */}
       <nav aria-label="Freight lifecycle stages" className="lifecycle-ribbon">
         {SUB_PRODUCTS.map((prod, idx) => {
           const isCurrent = currentStage === prod.id;
           const isCompleted = completedStages.includes(prod.id);
+          const isRolePriority = filterPriorityStagesForRole(activeRoleId).includes(prod.id);
 
           return (
             <button
               key={prod.id}
               onClick={() => handleSelectStage(prod.id)}
               className={`step-card-btn ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''}`}
+              style={
+                isRolePriority
+                  ? { borderColor: 'rgba(56, 189, 248, 0.45)', background: isCurrent ? undefined : 'rgba(56, 189, 248, 0.04)' }
+                  : undefined
+              }
             >
               <div className="step-icon-bubble">
                 <ProductIcon
-                  productId={
-                    prod.id === 'warehouse_space'
-                      ? 'product-06-warehouse-space-flow'
-                      : prod.id === 'asset_studio'
-                      ? 'product-04-asset-studio'
-                      : prod.id === 'cargo_fit'
-                      ? 'product-01-cargo-fit'
-                      : prod.id === 'freight_pricing'
-                      ? 'product-02-freight-pricing'
-                      : prod.id === 'hos_planner'
-                      ? 'product-03-hos-planner'
-                      : 'product-05-fleet-telematics'
-                  }
+                  productId={getProductSystemId(prod.id)}
                   size={20}
                 />
               </div>
               <div className="step-info-col">
                 <div className="step-code-row">
                   <span>STAGE 0{idx + 1} · {prod.code}</span>
+                  {isRolePriority && (
+                    <span
+                      style={{
+                        fontSize: '9px',
+                        background: 'rgba(56, 189, 248, 0.18)',
+                        color: '#38bdf8',
+                        padding: '1px 5px',
+                        borderRadius: '3px',
+                        fontWeight: 700,
+                        fontFamily: 'var(--font-mono, monospace)',
+                      }}
+                    >
+                      ROLE FOCUS
+                    </span>
+                  )}
                   {isCompleted && (
                     <span style={{ color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                       <IconCheck size={12} /> VIEWED
@@ -511,17 +568,7 @@ export function App() {
             <div className="stage-title-wrap">
               <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                 <ProductIcon
-                  productId={
-                    activeSubProduct.id === 'asset_studio'
-                      ? 'product-04-asset-studio'
-                      : activeSubProduct.id === 'cargo_fit'
-                      ? 'product-01-cargo-fit'
-                      : activeSubProduct.id === 'freight_pricing'
-                      ? 'product-02-freight-pricing'
-                      : activeSubProduct.id === 'hos_planner'
-                      ? 'product-03-hos-planner'
-                      : 'product-05-fleet-telematics'
-                  }
+                  productId={getProductSystemId(activeSubProduct.id)}
                   size={20}
                 />
               </span>

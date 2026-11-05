@@ -859,6 +859,10 @@ export const ProductIcon: React.FC<{ productId: string; size?: number | string; 
       return <IconRadio size={size} className={className} />;
     case 'product-06-warehouse-space-flow':
       return <IconBuilding size={size} className={className} />;
+    case 'product-07-yard-dock':
+      return <IconDoor size={size} className={className} />;
+    case 'product-08-carrier-trust':
+      return <IconShieldAlert size={size} className={className} />;
     default:
       return <IconTruck size={size} className={className} />;
   }
