@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { RecordedPlatformEvent } from './PlatformEventStreamModal';
+import { IconZap } from './icons';
 
 interface TickerAlert {
   id: string;
@@ -105,7 +106,8 @@ export const TelemetryTicker: React.FC<TelemetryTickerProps> = ({
               gap: 4,
             }}
           >
-            Mesh Stream ({liveEvents.length}) ⚡
+            <IconZap size={12} />
+            <span>Mesh Stream ({liveEvents.length})</span>
           </button>
         )}
 

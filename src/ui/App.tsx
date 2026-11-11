@@ -75,7 +75,9 @@ export function App() {
     try {
       const saved = localStorage.getItem('trucking-active-persona-role-v1');
       if (saved) return saved as PersonaRoleId;
-    } catch {}
+    } catch (err) {
+      console.warn('Failed to read saved persona role:', err);
+    }
     return 'PER-950374';
   });
 
@@ -83,7 +85,9 @@ export function App() {
     setActiveRoleId(roleId);
     try {
       localStorage.setItem('trucking-active-persona-role-v1', roleId);
-    } catch {}
+    } catch (err) {
+      console.warn('Failed to persist persona role:', err);
+    }
   };
 
   // Subscribe to cross-tab Platform Mesh events
@@ -99,12 +103,15 @@ export function App() {
           senderPort: msg.senderPort,
           timestamp: msg.timestamp,
           summary: `${msg.type} from ${msg.senderProduct}`,
+          status: 'VERIFIED',
           severity: msg.type === 'SAFETY_ALERT' ? 'warning' : 'info',
           payloadJson: JSON.stringify(msg.payload, null, 2),
         }));
         setPlatformEvents(initialRecorded);
       }
-    } catch {}
+    } catch (err) {
+      console.warn('Failed to load recent platform bus events:', err);
+    }
 
     const handleEvent = (type: any, payload: any, msg: any) => {
       let summary = '';
@@ -336,7 +343,7 @@ export function App() {
               </div>
               <div className="step-info-col">
                 <div className="step-code-row">
-                  <span>STAGE 0{idx + 1} · {prod.code}</span>
+                  <span style={{ whiteSpace: 'nowrap' }}>STAGE 0{idx + 1} · {prod.code}</span>
                   {isRolePriority && (
                     <span
                       style={{
@@ -347,13 +354,14 @@ export function App() {
                         borderRadius: '3px',
                         fontWeight: 700,
                         fontFamily: 'var(--font-mono, monospace)',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       ROLE FOCUS
                     </span>
                   )}
                   {isCompleted && (
-                    <span style={{ color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                       <IconCheck size={12} /> VIEWED
                     </span>
                   )}
@@ -441,7 +449,7 @@ export function App() {
           <div className="dossier-card">
             <h4>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconDollar size={14} /> P02 Freight Pricing</span>
-              <span style={{ color: '#10b981' }}>${activeOrder.totalCarrierPay.toLocaleString()}</span>
+              <span style={{ color: '#10b981' }}>${activeOrder.totalCarrierPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </h4>
             <div className="dossier-row">
               <span className="d-label">Linehaul Rate:</span>
@@ -512,7 +520,7 @@ export function App() {
               </span>
               <h2>{activeSubProduct.name}</h2>
               <span className="stage-badge">PORT {activeSubProduct.port}</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8' }}>— {activeSubProduct.tagline}</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8' }}>{activeSubProduct.tagline}</span>
             </div>
 
             <div className="glass-actions">
@@ -552,7 +560,7 @@ export function App() {
           <span><strong>Active Load:</strong> {activeOrder.orderNumber}</span>
           <span><strong>Vehicle:</strong> {activeOrder.vehicleName}</span>
           <span><strong>Payload:</strong> {activeOrder.totalPayloadLbs.toLocaleString()} lbs ({activeOrder.packageCount} units)</span>
-          <span><strong>Total Rate:</strong> ${activeOrder.totalCarrierPay.toLocaleString()}</span>
+          <span><strong>Total Rate:</strong> ${activeOrder.totalCarrierPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
 
         <div className="footer-actions">

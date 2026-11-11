@@ -1,5 +1,6 @@
 import React from 'react';
 import type { RecordedPlatformEvent } from './PlatformEventStreamModal';
+import { IconShieldAlert } from './icons';
 
 export interface ExceptionItem {
   id: string;
@@ -83,18 +84,20 @@ export const ExceptionControlTower: React.FC<ExceptionControlTowerProps> = ({
         background: 'linear-gradient(180deg, rgba(244, 63, 94, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%)',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
         <h4 style={{ margin: 0, color: '#fb7185', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span>🚨</span> Exception Control Tower
+          <IconShieldAlert size={14} /> Exception Control Tower
         </h4>
         <span
           style={{
             background: '#f43f5e',
             color: '#fff',
             fontSize: 10,
-            fontWeight: 800,
-            padding: '2px 7px',
-            borderRadius: 10,
+            fontWeight: 600,
+            padding: '2px 8px',
+            borderRadius: 6,
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
           }}
         >
           {meshExceptions.length} UNVERIFIED MESH ALERTS · {baselineExceptions.length} EXAMPLES
@@ -113,10 +116,10 @@ export const ExceptionControlTower: React.FC<ExceptionControlTowerProps> = ({
               fontSize: 11,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
               <span style={{ fontWeight: 700, color: '#f8fafc' }}>{ex.id.startsWith('ex-') ? `EXAMPLE: ${ex.title}` : `UNVERIFIED MESH: ${ex.title}`}</span>
-              <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>
-                {ex.sourceCode} :{ex.port}
+              <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                {ex.sourceCode}:{ex.port}
               </span>
             </div>
             <div style={{ color: '#cbd5e1', margin: '3px 0 6px', fontSize: 11, lineHeight: 1.3 }}>

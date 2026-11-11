@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PlatformEventType } from '../engine/platformBus';
+import { IconX, IconRadio } from './icons';
 
 export interface RecordedPlatformEvent {
   id: string;
@@ -123,11 +124,14 @@ export const PlatformEventStreamModal: React.FC<PlatformEventStreamModalProps> =
               fontSize: 22,
               cursor: 'pointer',
               color: '#64748b',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               padding: 4,
               lineHeight: 1,
             }}
           >
-            ✕
+            <IconX size={16} />
           </button>
         </div>
 
@@ -186,7 +190,7 @@ export const PlatformEventStreamModal: React.FC<PlatformEventStreamModalProps> =
         <div style={{ padding: '16px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
           {filteredEvents.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
-              <div style={{ fontSize: 24, marginBottom: 8 }}>📡</div>
+              <div style={{ display: 'inline-flex', marginBottom: 8, color: '#64748b' }}><IconRadio size={24} /></div>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>No Platform Events Recorded</p>
               <p style={{ margin: '4px 0 0', fontSize: 12 }}>
                 As you navigate through Cargo Fit, Freight Pricing, HOS Planner, Telematics, or Carrier Trust, cross-tab events will appear here in real time.

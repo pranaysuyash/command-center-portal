@@ -120,7 +120,9 @@ class PlatformEventBus {
           try {
             const parsed = JSON.parse(e.newValue) as PlatformMessage;
             this.dispatchToLocalListeners(parsed);
-          } catch {}
+          } catch (error) {
+            console.warn('Ignored malformed cross-tab platform bus payload.', error);
+          }
         }
       });
     }
@@ -163,7 +165,9 @@ class PlatformEventBus {
         localStorage.setItem(PLATFORM_RING_BUFFER_KEY, JSON.stringify(this.memoryRingBuffer));
         // Dispatch storage event trigger
         localStorage.setItem(PLATFORM_STORAGE_EVENT_KEY, JSON.stringify(message));
-      } catch {}
+      } catch (error) {
+        console.warn('Unable to persist platform bus event to localStorage.', error);
+      }
     }
   }
 
@@ -177,7 +181,8 @@ class PlatformEventBus {
         if (!raw) return [];
         const buffer: PlatformMessage[] = JSON.parse(raw);
         return Array.isArray(buffer) ? buffer.slice(0, limit) : [];
-      } catch {
+      } catch (error) {
+        console.warn('Unable to read platform bus ring buffer from localStorage.', error);
         return [];
       }
     }
@@ -190,7 +195,9 @@ class PlatformEventBus {
       try {
         localStorage.removeItem(PLATFORM_RING_BUFFER_KEY);
         localStorage.removeItem(PLATFORM_STORAGE_EVENT_KEY);
-      } catch {}
+      } catch (error) {
+        console.warn('Unable to clear platform bus ring buffer in localStorage.', error);
+      }
     }
   }
 

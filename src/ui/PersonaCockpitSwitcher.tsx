@@ -201,7 +201,7 @@ export const PERSONA_ROLES: PersonaRoleDefinition[] = [
         },
         {
           label: 'Total Carrier Settlement',
-          value: `$${order.totalCarrierPay.toLocaleString()}`,
+          value: `$${order.totalCarrierPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           unit: 'USD',
           status: 'optimal',
           regulationOrRef: 'Includes EIA Surcharge & Accessorials',
@@ -245,7 +245,7 @@ export const PERSONA_ROLES: PersonaRoleDefinition[] = [
     roleTitle: 'DC Flow Master & Yard Operations Lead',
     badgeCode: 'DC-LEAD',
     organization: 'Midwest Intermountain Cold Distribution Center',
-    avatarColor: '#8b5cf6', // Violet
+    avatarColor: '#14b8a6', // Teal
     mandate: 'Inbound putaway planning, bay capacity limits, cross-dock flow, drop lot staging, reefer temperature setpoints, gate kiosk check-in, detention mitigation.',
     touchstone: 'GS1 EPCIS 2.0 Inbound Traceability · FSMA Cold-Chain Temperature Records · ISO 17712 High-Security Bolt Seals',
     priorityStages: ['warehouse_space', 'yard_dock', 'fleet_telematics'],
