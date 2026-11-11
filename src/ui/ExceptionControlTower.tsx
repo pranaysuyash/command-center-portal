@@ -97,7 +97,7 @@ export const ExceptionControlTower: React.FC<ExceptionControlTowerProps> = ({
             borderRadius: 10,
           }}
         >
-          {allExceptions.length} ACTIVE
+          {meshExceptions.length} UNVERIFIED MESH ALERTS · {baselineExceptions.length} EXAMPLES
         </span>
       </div>
 
@@ -114,7 +114,7 @@ export const ExceptionControlTower: React.FC<ExceptionControlTowerProps> = ({
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 700, color: '#f8fafc' }}>{ex.title}</span>
+              <span style={{ fontWeight: 700, color: '#f8fafc' }}>{ex.id.startsWith('ex-') ? `EXAMPLE: ${ex.title}` : `UNVERIFIED MESH: ${ex.title}`}</span>
               <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>
                 {ex.sourceCode} :{ex.port}
               </span>

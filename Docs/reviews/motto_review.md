@@ -2,119 +2,119 @@
 
 - Doctrine path: /Users/pranay/Projects/trucking/products/command-center-portal/OPERATING_DOCTRINE.md
 - SHA-256: e14bab7b1964d8b755c9e6c7f5b1c2b44e1d726033fa23aeaee6ce921e271a75
-- Generated: 2026-11-05T10:05:05Z
+- Generated: 2026-11-05T18:29:27Z
 - This is a generated review artifact, not an instruction source.
 
 ## SECTION_0
 
 - Label: §0 Start from live truth
 - Reviewed: True
-- Evidence: Read live truth: git status showed 5 dirty paths (src/engine/types.ts, src/ui/App.tsx, src/ui/icons.tsx, new PersonaCockpitSwitcher.tsx, new personaCockpit.test.ts) plus full diffs.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_0: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_00_INTEGRATED
 
 - Label: Full doctrine integrated audit
 - Reviewed: True
-- Evidence: Integrated audit of OPERATING_DOCTRINE.md across 18 sections for this diff: live truth read first (git status/diff of src/engine/types.ts, src/ui/App.tsx, src/ui/icons.tsx); outcomes limited to icon-label corrections plus a typed persona cockpit in src/ui/PersonaCockpitSwitcher.tsx; canonical single source kept and the old nested ternary removed; additive edits preserve existing lifecycle rendering; evidence from npm test (5 files/30 tests) and npm run build; no AI, auth, or external effects introduced; residual risk is visual only in src/ui/App.tsx ROLE FOCUS badges.
+- Evidence: Integrated audit for .gitignore, Docs/reviews/motto_review.md: gitignore/context/motto-review hygiene only; no runtime, API, schema, or business-logic behavior changed. Staged diff reviewed.
 
 ## SECTION_1
 
 - Label: §1 Outcomes and retained value
 - Reviewed: True
-- Evidence: Outcomes: src/engine/types.ts corrects P06/P07/P08 icon labels; src/ui/App.tsx adds getProductSystemId and persona cockpit; tests/personaCockpit.test.ts locks the roster.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_1: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_10
 
 - Label: §10 Parallel work and contested state
 - Reviewed: True
-- Evidence: Parallel work: src/ui/App.tsx edits additive (new state, new mount); existing 5-stage ribbon logic preserved, comment renamed to 8-Stage.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_10: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_11
 
 - Label: §11 Engineering and data integrity
 - Reviewed: True
-- Evidence: Engineering integrity: src/ui/PersonaCockpitSwitcher.tsx exports typed interfaces; tests/personaCockpit.test.ts covers no-NaN metric evaluation and fallback lookup.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_11: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_12
 
 - Label: §12 AI output boundary
 - Reviewed: True
-- Evidence: AI boundary: n/a: no model calls added; role metrics are deterministic functions in src/ui/PersonaCockpitSwitcher.tsx.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_12: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_13
 
 - Label: §13 Product, operator, and claim reality
 - Reviewed: True
-- Evidence: Product reality: src/ui/PersonaCockpitSwitcher.tsx roles map to existing lifecycle stages declared in src/engine/types.ts; no new claim surface.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_13: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_14
 
 - Label: §14 Documentation and decisions
 - Reviewed: True
-- Evidence: Documentation: n/a: change documented in commit message; no docs/ file changed in this diff.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_14: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_15
 
 - Label: §15 Completion contract
 - Reviewed: True
-- Evidence: Completion contract: npm test 30/30 pass, npm run build exits 0; report covers src/ and tests/ paths only.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_15: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_16
 
 - Label: §16 Specialist doctrine routing
 - Reviewed: True
-- Evidence: Specialist doctrine: n/a: no review/security/release doctrine gate triggered by src/ui UI change.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_16: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_17
 
 - Label: §17 Propagation contract
 - Reviewed: True
-- Evidence: Propagation: src/engine/types.ts icon fix propagates to src/ui/App.tsx SUB_PRODUCTS rendering and src/ui/icons.tsx ProductIcon switch.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_17: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_2
 
 - Label: §2 Truth taxonomy
 - Reviewed: True
-- Evidence: Truth taxonomy: tests/personaCockpit.test.ts asserts roster/metrics; role metrics read from FreightOrderSpec via src/ui/PersonaCockpitSwitcher.tsx focalMetrics(order), not fabricated.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_2: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_3
 
 - Label: §3 Proportional rigor and evidence
 - Reviewed: True
-- Evidence: Evidence: npm test ran 5 files / 30 tests passed including tests/personaCockpit.test.ts (6 its); npm run build typecheck+build.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_3: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_4
 
 - Label: §4 Authorization and side effects
 - Reviewed: True
-- Evidence: Authorization: user explicitly authorized repo publish; edits confined to src/ui/App.tsx, src/ui/icons.tsx, src/engine/types.ts and new component/test files.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_4: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_5
 
 - Label: §5 Canonical paths and ownership
 - Reviewed: True
-- Evidence: Canonical ownership: src/ui/PersonaCockpitSwitcher.tsx is the single persona-role source; App.tsx stores activeRoleId in localStorage key trucking-active-persona-role-v1.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_5: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_6
 
 - Label: §6 Semantic salvage and supersession
 - Reviewed: True
-- Evidence: Supersession: src/ui/App.tsx nested ternary product-id chain replaced by getProductSystemId(stageId); no duplicate rosters left in App.tsx.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_6: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_7
 
 - Label: §7 Capability routing
 - Reviewed: True
-- Evidence: Capability routing: existing icons in src/ui/icons.tsx reused (IconDoor, IconShieldAlert) instead of authoring new icon set.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_7: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_8
 
 - Label: §8 Skills lifecycle
 - Reviewed: True
-- Evidence: Skills lifecycle: n/a: no new skills adopted; reused repo-local patterns from src/ui/App.tsx.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_8: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.
 
 ## SECTION_9
 
 - Label: §9 Exploration and durable knowledge
 - Reviewed: True
-- Evidence: Durable knowledge: n/a: docs only for record; no exploration map change in this diff outside src/ and tests/.
+- Evidence: Staged diff reviewed: .gitignore, Docs/reviews/motto_review.md. Changes are gitignore hardening and/or regenerated agent context/motto review artifacts; no runtime/business logic changes. Section SECTION_9: proportional review confirms low-risk additive hygiene/docs-generated updates in .gitignore, Docs/reviews/motto_review.md.

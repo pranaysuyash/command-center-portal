@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FreightOrderSpec } from '../engine/types';
 import {
   generateEdi204,
@@ -17,27 +17,32 @@ interface EdiHubModalProps {
 
 export const EdiHubModal: React.FC<EdiHubModalProps> = ({ order, isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'204' | '990' | '214' | '210'>('204');
+  const [tenderResponse, setTenderResponse] = useState<boolean | null>(null);
   const [viewMode, setViewMode] = useState<'segments' | 'raw' | 'json'>('segments');
   const [copiedNote, setCopiedNote] = useState<string | null>(null);
+  useEffect(() => { setTenderResponse(null); }, [order.orderId]);
 
   if (!isOpen) return null;
 
   const bundles: Record<string, EdiDocumentBundle> = {
     '204': generateEdi204(order),
-    '990': generateEdi990(order, true),
+    '990': tenderResponse === null ? generateEdi204(order) : generateEdi990(order, tenderResponse),
     '214': generateEdi214(order),
     '210': generateEdi210(order),
   };
 
   const currentBundle = bundles[activeTab];
+  const needsTenderResponse = activeTab === '990' && tenderResponse === null;
 
   const handleCopyRaw = () => {
+    if (needsTenderResponse) return;
     navigator.clipboard.writeText(currentBundle.rawX12);
     setCopiedNote(`Copied EDI ${activeTab} Raw X12 to clipboard!`);
     setTimeout(() => setCopiedNote(null), 3000);
   };
 
   const handleDownload = () => {
+    if (needsTenderResponse) return;
     const dataStr = 'data:text/plain;charset=utf-8,' + encodeURIComponent(currentBundle.rawX12);
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute('href', dataStr);
@@ -55,7 +60,7 @@ export const EdiHubModal: React.FC<EdiHubModalProps> = ({ order, isOpen, onClose
             <div>
               <h3>ANSI ASC X12 EDI TRANSACTION HUB</h3>
               <span className="subtitle">
-                Automated Freight Protocol Translator · Order {order.orderNumber}
+                Scenario examples only · No transaction is transmitted · Order {order.orderNumber}
               </span>
             </div>
           </div>
@@ -76,7 +81,7 @@ export const EdiHubModal: React.FC<EdiHubModalProps> = ({ order, isOpen, onClose
             onClick={() => setActiveTab('990')}
           >
             <span className="tab-code">EDI 990</span>
-            <span className="tab-name">Tender Accept</span>
+            <span className="tab-name">Tender Response</span>
           </button>
           <button
             className={`edi-tab ${activeTab === '214' ? 'active' : ''}`}
@@ -94,11 +99,12 @@ export const EdiHubModal: React.FC<EdiHubModalProps> = ({ order, isOpen, onClose
           </button>
         </div>
 
+        {activeTab === '990' && <label>Choose a simulated tender response: <select value={tenderResponse === null ? '' : String(tenderResponse)} onChange={e => setTenderResponse(e.target.value === '' ? null : e.target.value === 'true')}><option value="">Choose response</option><option value="true">Accept example</option><option value="false">Decline example</option></select></label>}
         {/* Action Controls & Format Selector */}
         <div className="edi-toolbar">
           <div className="doc-meta-info">
-            <span className="badge-standard">{currentBundle.standard}</span>
-            <span className="badge-direction">{currentBundle.direction}</span>
+            {!needsTenderResponse && <><span className="badge-standard">{currentBundle.standard}</span>
+            <span className="badge-direction">{currentBundle.direction}</span></>}
           </div>
 
           <div className="view-toggle-group">
@@ -124,10 +130,10 @@ export const EdiHubModal: React.FC<EdiHubModalProps> = ({ order, isOpen, onClose
 
           <div className="modal-actions-right">
             {copiedNote && <span className="copy-notice">{copiedNote}</span>}
-            <button onClick={handleCopyRaw} className="btn-copy-action">
+            <button disabled={needsTenderResponse} onClick={handleCopyRaw} className="btn-copy-action">
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconClipboard size={14} /> Copy X12</span>
             </button>
-            <button onClick={handleDownload} className="btn-dl-action">
+            <button disabled={needsTenderResponse} onClick={handleDownload} className="btn-dl-action">
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconDownload size={14} /> Download .x12</span>
             </button>
           </div>
@@ -135,7 +141,8 @@ export const EdiHubModal: React.FC<EdiHubModalProps> = ({ order, isOpen, onClose
 
         {/* Main Body */}
         <div className="edi-modal-body">
-          {viewMode === 'segments' && (
+          {needsTenderResponse && <p>Select a simulated response to view or export EDI 990.</p>}
+          {!needsTenderResponse && viewMode === 'segments' && (
             <div className="segment-explorer-view">
               <div className="segment-list">
                 {currentBundle.parsedSegments.map((seg, idx) => (
@@ -173,7 +180,7 @@ export const EdiHubModal: React.FC<EdiHubModalProps> = ({ order, isOpen, onClose
             </div>
           )}
 
-          {viewMode === 'raw' && (
+          {!needsTenderResponse && viewMode === 'raw' && (
             <div className="raw-x12-view">
               <pre className="x12-code-box">
                 {currentBundle.rawX12.split('\n').map((line, lIdx) => (
@@ -186,7 +193,7 @@ export const EdiHubModal: React.FC<EdiHubModalProps> = ({ order, isOpen, onClose
             </div>
           )}
 
-          {viewMode === 'json' && (
+          {!needsTenderResponse && viewMode === 'json' && (
             <div className="json-tree-view">
               <pre className="json-code-box">
                 {JSON.stringify(currentBundle.jsonObj, null, 2)}

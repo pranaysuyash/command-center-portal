@@ -11,6 +11,7 @@ import {
   saveLifecycleState,
 } from '../engine/lifecycle';
 import { platformBus } from '../engine/platformBus';
+import { summarizeHosScenario } from '../engine/scenarioEvent';
 import { SuiteDock } from './SuiteDock';
 import {
   IconTruck,
@@ -115,79 +116,16 @@ export function App() {
       } else if (type === 'PRICING_UPDATED') {
         summary = `Quote: $${payload.totalQuote?.toLocaleString()} ($${payload.ratePerMile}/mi) · OR: ${payload.operatingRatioPct}%`;
         severity = payload.operatingRatioPct > 98 ? 'warning' : 'info';
-        // Auto-advance pricing stage in lifecycle stepper with verified decision
-        setCompletedStages((prev) => (prev.includes('freight_pricing') ? prev : [...prev, 'freight_pricing']));
-        setStageDecisions((prev) => ({
-          ...prev,
-          freight_pricing: {
-            stageId: 'freight_pricing',
-            status: 'COMPLETED',
-            verifiedBy: `${msg.senderProduct} (Port ${msg.senderPort})`,
-            timestamp: msg.timestamp || new Date().toISOString(),
-            computedOutput: payload,
-            notes: summary,
-          },
-        }));
       } else if (type === 'HOS_SCHEDULE_UPDATED') {
-        summary = `Corridor: ${payload.totalTransitHours} hrs (${payload.driverMode}) · ${payload.isLegal ? '✓ Legal' : '⚠ Violation'}`;
-        severity = payload.isLegal ? 'info' : 'critical';
-        // Auto-advance HOS stage in lifecycle stepper with verified decision
-        setCompletedStages((prev) => (prev.includes('hos_planner') ? prev : [...prev, 'hos_planner']));
-        setStageDecisions((prev) => ({
-          ...prev,
-          hos_planner: {
-            stageId: 'hos_planner',
-            status: payload.isLegal ? 'COMPLETED' : 'REJECTED',
-            verifiedBy: `${msg.senderProduct} (Port ${msg.senderPort})`,
-            timestamp: msg.timestamp || new Date().toISOString(),
-            computedOutput: payload,
-            notes: summary,
-          },
-        }));
+        summary = summarizeHosScenario(payload);
+        severity = 'info';
       } else if (type === 'CARGO_LOAD_UPDATED') {
-        summary = `Cargo: ${payload.itemCount} items, ${payload.totalWeightLbs?.toLocaleString()} lbs · Axle: ${payload.axleLegal ? 'Legal' : 'Overload'}`;
+        summary = `Scenario cargo: ${payload.itemCount} items, ${payload.totalWeightLbs?.toLocaleString()} lbs; actual axle status unverified`;
         severity = payload.axleLegal ? 'info' : 'warning';
-        // Auto-advance cargo fit stage in lifecycle stepper with verified decision
-        setCompletedStages((prev) => (prev.includes('cargo_fit') ? prev : [...prev, 'cargo_fit']));
-        setStageDecisions((prev) => ({
-          ...prev,
-          cargo_fit: {
-            stageId: 'cargo_fit',
-            status: payload.axleLegal ? 'COMPLETED' : 'OVERRIDDEN',
-            verifiedBy: `${msg.senderProduct} (Port ${msg.senderPort})`,
-            timestamp: msg.timestamp || new Date().toISOString(),
-            computedOutput: payload,
-            notes: summary,
-          },
-        }));
       } else if (type === 'ORDER_SELECTED') {
         summary = `Order ${payload.orderNumber}: ${payload.origin} → ${payload.destination} (${payload.distanceMiles} mi)`;
-        setCompletedStages((prev) => (prev.includes('asset_studio') ? prev : [...prev, 'asset_studio']));
-        setStageDecisions((prev) => ({
-          ...prev,
-          asset_studio: {
-            stageId: 'asset_studio',
-            status: 'COMPLETED',
-            verifiedBy: `${msg.senderProduct} (Port ${msg.senderPort})`,
-            timestamp: msg.timestamp || new Date().toISOString(),
-            computedOutput: payload,
-            notes: summary,
-          },
-        }));
       } else if (type === 'TELEMATICS_STREAM_TICK') {
         summary = `Unit ${payload.vehicleUnitNumber}: ${payload.speedMph} mph · ${payload.nearestCity} · Fuel ${payload.fuelLevelPct}%`;
-        setCompletedStages((prev) => (prev.includes('fleet_telematics') ? prev : [...prev, 'fleet_telematics']));
-        setStageDecisions((prev) => ({
-          ...prev,
-          fleet_telematics: {
-            stageId: 'fleet_telematics',
-            status: 'COMPLETED',
-            verifiedBy: `${msg.senderProduct} (Port ${msg.senderPort})`,
-            timestamp: msg.timestamp || new Date().toISOString(),
-            computedOutput: payload,
-            notes: summary,
-          },
-        }));
       } else {
         summary = JSON.stringify(payload);
       }

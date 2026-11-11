@@ -145,7 +145,8 @@ describe('End-to-End Sovereign Freight Lifecycle Integration Suite', () => {
       },
     }, -10.0);
     expect(telemetry.isReeferExcursion).toBe(false);
-    expect(telemetry.highestAlertSeverity).toBe('NORMAL');
+    // No DTC list was supplied, so a normal overall health conclusion is unsupported.
+    expect(telemetry.highestAlertSeverity).toBe('UNKNOWN');
 
     // 2. Calculate IFTA jurisdiction road mileage across I-80 corridor
     const iftaMiles = aggregateCorridorJurisdictionMiles(CORRIDOR_I80, 1390);

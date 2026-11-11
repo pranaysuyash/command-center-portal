@@ -10,8 +10,8 @@ interface DispatchManifestModalProps {
 
 export const DispatchManifestModal: React.FC<DispatchManifestModalProps> = ({ order, isOpen, onClose }) => {
   const [isApproved, setIsApproved] = useState<boolean>(false);
-  const [approvalTimestamp, setApprovalTimestamp] = useState<string | null>(null);
-  useEffect(() => { setIsApproved(false); setApprovalTimestamp(null); }, [order.orderId, order.totalPayloadLbs, order.vehicleId]);
+
+  useEffect(() => { setIsApproved(false); }, [order.orderId, order.totalPayloadLbs, order.vehicleId]);
 
   if (!isOpen) return null;
 
@@ -34,7 +34,6 @@ export const DispatchManifestModal: React.FC<DispatchManifestModalProps> = ({ or
   const handleApprove = () => {
     if (!allAxlesModeledFeasible) return;
     setIsApproved(true);
-    setApprovalTimestamp(new Date().toLocaleString());
   };
 
   return (
@@ -45,13 +44,13 @@ export const DispatchManifestModal: React.FC<DispatchManifestModalProps> = ({ or
             <span style={{ display: 'inline-flex', alignItems: 'center', color: '#38bdf8' }}><IconFileText size={18} /></span>
             <strong>MASTER FREIGHT BILL OF LADING & DISPATCH PACKET</strong>
             <span className={`status-pill ${isApproved ? 'status-normal' : 'status-caution'}`} style={{ marginLeft: '12px' }}>
-              {isApproved ? 'OPERATOR APPROVED' : 'DRAFT — PENDING AUDIT'}
+              {isApproved ? 'SCENARIO REVIEWED LOCALLY' : 'SCENARIO DRAFT'}
             </span>
           </div>
           <div className="toolbar-right">
             {!isApproved && (
               <button onClick={handleApprove} className="btn-modal-print" style={{ background: '#10b981', borderColor: '#059669' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconCheck size={14} /> Authorize & Sign</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconCheck size={14} /> Mark scenario reviewed</span>
               </button>
             )}
             <button onClick={() => window.print()} className="btn-modal-print">
@@ -65,7 +64,7 @@ export const DispatchManifestModal: React.FC<DispatchManifestModalProps> = ({ or
 
         {/* Printable Master BOL Sheet */}
         <div className="printable-bol-sheet">
-          {!isApproved && (
+          {(
             <div style={{
               background: '#fef3c7',
               border: '1px solid #f59e0b',
@@ -77,7 +76,7 @@ export const DispatchManifestModal: React.FC<DispatchManifestModalProps> = ({ or
               marginBottom: '16px',
               textAlign: 'center',
             }}>
-              NOTICE: DRAFT OPERATIONAL PLAN ONLY · NOT AUTHORIZED FOR HIGHWAY TRANSIT UNTIL SCALE WEIGH-IN & SIGNED APPROVAL
+              SCENARIO EXAMPLE ONLY · NO SIGNATURE, TENDER ACCEPTANCE OR DISPATCH AUTHORIZATION RECORDED
             </div>
           )}
 
@@ -85,7 +84,7 @@ export const DispatchManifestModal: React.FC<DispatchManifestModalProps> = ({ or
           <div className="bol-header-grid">
             <div className="bol-shipper-col">
               <div className="bol-brand-name">VICS STANDARD BILL OF LADING</div>
-              <div className="bol-sub-standard">CONFORMS TO GS1 US LOGISTICS SPECIFICATIONS (SIMULATED SCENARIO)</div>
+              <div className="bol-sub-standard">SIMULATED SCENARIO · NOT A VERIFIED GS1 DOCUMENT</div>
               <div className="bol-party-box">
                 <span className="party-title">SHIP FROM (ORIGIN):</span>
                 <p><strong>{order.customerName}</strong></p>
@@ -220,29 +219,17 @@ export const DispatchManifestModal: React.FC<DispatchManifestModalProps> = ({ or
             <div className="sig-block">
               <span className="sig-role">SHIPPER SIGNATURE / DATE:</span>
               <div className="sig-line">
-                {isApproved ? (
-                  <span className="sig-stamp" style={{ color: '#059669' }}>
-                    APPROVED BY DISPATCH ({approvalTimestamp})
-                  </span>
-                ) : (
-                  <span className="sig-placeholder">[ PENDING OPERATOR AUTHORIZATION ]</span>
-                )}
+                <span className="sig-placeholder">[ NO SHIPPER SIGNATURE RECORDED ]</span>
               </div>
-              <p className="sig-sub">Shipper certifies goods are packaged, marked, and labeled in accordance with DOT specifications.</p>
+              <p className="sig-sub">Shipper certification has not been collected.</p>
             </div>
 
             <div className="sig-block">
               <span className="sig-role">CARRIER DRIVER SIGNATURE / DATE:</span>
               <div className="sig-line">
-                {isApproved ? (
-                  <span className="sig-stamp" style={{ color: '#0284c7' }}>
-                    DOCK TENDER ACCEPTED · {order.assignedDriverId.split(' ')[0]}
-                  </span>
-                ) : (
-                  <span className="sig-placeholder">[ PENDING CARRIER DOCK SIGN-OFF ]</span>
-                )}
+                <span className="sig-placeholder">[ NO DRIVER SIGNATURE OR ACCEPTANCE RECORDED ]</span>
               </div>
-              <p className="sig-sub">Carrier acknowledges receipt of packages in apparent good order. Subject to dock seal verification.</p>
+              <p className="sig-sub">Carrier receipt and dock seal verification have not been collected.</p>
             </div>
 
             <div className="sig-block">

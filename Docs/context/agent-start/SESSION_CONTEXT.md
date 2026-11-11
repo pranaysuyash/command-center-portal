@@ -1,6 +1,6 @@
 # Session Context
 
-- Generated: 2026-11-05T18:29:18Z
+- Generated: 2026-11-11T13:17:30Z
 - Project: `trucking/products/command-center-portal`
 - Provider: `openai`
 - Model: `text-embedding-3-small`
@@ -13,7 +13,7 @@
 - Operating doctrine: `OPERATING_DOCTRINE.md` v8.2 (sha256 `e14bab7b1964d8b7…`) — always applies
 - Project: `trucking/products/command-center-portal`
 - Routing mechanism: agent-start doctrine-family router v1.1 (deterministic intent-signal model)
-- Generated at: 2026-11-05T18:29:18Z
+- Generated at: 2026-11-11T13:17:30Z
 - Generator: agent-start lib/doctrine_family.py
 
 Doctrine routing for this run (task intent not supplied; deferred):
@@ -41,7 +41,30 @@ No specialist doctrine was selected for this run. The Operating Doctrine routing
 
 ## Project-Focused Retrieval
 
-> NOTE: Project collection is temporarily locked by another index/search process; using shared workspace context for this run.
+### Architecture Decisions
+- Collection: `projects_proj_trucking_products_command_center_portal`
+- Query: `architecture decisions for trucking/products/command-center-portal`
+_Fast mode (--skip-index): retrieval skipped to keep startup non-blocking. Run `/Users/pranay/Projects/agent-start --project trucking/products/command-center-portal` for full retrieval, or set `AGENT_START_SKIP_INDEX_RETRIEVE=1` if you want retrieval with skip-index._
+
+### Project Management Workflow
+- Collection: `projects_proj_trucking_products_command_center_portal`
+- Query: `project management workflow for trucking/products/command-center-portal`
+_Fast mode (--skip-index): retrieval skipped to keep startup non-blocking. Run `/Users/pranay/Projects/agent-start --project trucking/products/command-center-portal` for full retrieval, or set `AGENT_START_SKIP_INDEX_RETRIEVE=1` if you want retrieval with skip-index._
+
+### Known Issues and Worklogs
+- Collection: `projects_proj_trucking_products_command_center_portal`
+- Query: `known issues and worklog for trucking/products/command-center-portal`
+_Fast mode (--skip-index): retrieval skipped to keep startup non-blocking. Run `/Users/pranay/Projects/agent-start --project trucking/products/command-center-portal` for full retrieval, or set `AGENT_START_SKIP_INDEX_RETRIEVE=1` if you want retrieval with skip-index._
+
+### Prompts and Guidelines
+- Collection: `projects_proj_trucking_products_command_center_portal`
+- Query: `prompts and guidelines for trucking/products/command-center-portal`
+_Fast mode (--skip-index): retrieval skipped to keep startup non-blocking. Run `/Users/pranay/Projects/agent-start --project trucking/products/command-center-portal` for full retrieval, or set `AGENT_START_SKIP_INDEX_RETRIEVE=1` if you want retrieval with skip-index._
+
+### System Learning Graph
+- Collection: `projects_proj_trucking_products_command_center_portal`
+- Query: `knowledge graph memory learning feedback loops autoresearch semantic taste graph for trucking/products/command-center-portal`
+_Fast mode (--skip-index): retrieval skipped to keep startup non-blocking. Run `/Users/pranay/Projects/agent-start --project trucking/products/command-center-portal` for full retrieval, or set `AGENT_START_SKIP_INDEX_RETRIEVE=1` if you want retrieval with skip-index._
 
 ## Shared Cross-Project Retrieval
 

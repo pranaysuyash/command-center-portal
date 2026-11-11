@@ -175,7 +175,8 @@ export function generateEdi204(order: FreightOrderSpec): EdiDocumentBundle {
 /**
  * Generates an EDI 990 Response to a Load Tender.
  */
-export function generateEdi990(order: FreightOrderSpec, accepted: boolean = true): EdiDocumentBundle {
+export function generateEdi990(order: FreightOrderSpec, accepted: boolean): EdiDocumentBundle {
+  if (typeof accepted !== 'boolean') throw new Error('Choose an explicit simulated tender response.');
   const today = new Date().toISOString();
   const dateYYMMDD = formatDate(today, 'YYMMDD');
   const dateCCYYMMDD = formatDate(today, 'CCYYMMDD');
@@ -188,7 +189,7 @@ export function generateEdi990(order: FreightOrderSpec, accepted: boolean = true
     `B1*CARRIEREXP*${order.orderNumber}*${dateCCYYMMDD}*${accepted ? 'A' : 'D'}~`,
     `N9*OQ*${order.orderId}~`,
     `V9*${order.assignedTractorUnit}*${order.vehicleName.slice(0, 20)}~`,
-    `K1*ACCEPTED UNDER RATE CONFIRMATION $${order.totalCarrierPay.toFixed(2)}~`,
+    accepted ? `K1*ACCEPTED UNDER RATE CONFIRMATION $${order.totalCarrierPay.toFixed(2)}~` : 'K1*DECLINED~',
     `SE*6*0001~`,
     `GE*1*2~`,
     `IEA*1*000000002~`,
@@ -205,7 +206,7 @@ export function generateEdi990(order: FreightOrderSpec, accepted: boolean = true
       orderNumber: order.orderNumber,
       decision: accepted ? 'ACCEPTED' : 'DECLINED',
       carrierCode: 'CARRIEREXP',
-      rateConfirmed: order.totalCarrierPay,
+      rateConfirmed: accepted ? order.totalCarrierPay : null,
       assignedTractor: order.assignedTractorUnit,
     },
     parsedSegments: [
